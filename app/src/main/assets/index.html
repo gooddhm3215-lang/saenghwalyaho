@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>오늘의메모</title>
+<style>
+:root{
+  --bg:#f5f6f8;--card:#fff;--text:#1f2329;--sub:#6b7280;--line:#e5e7eb;
+  --primary:#3b6ef5;--primary-weak:#e8efff;--red:#e5484d;--green:#1f9d55;--orange:#f59e0b;--purple:#8b5cf6;
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:15px}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--text)}
+header{position:sticky;top:0;z-index:10;background:var(--bg);display:flex;align-items:center;
+  justify-content:space-between;padding:14px 16px 8px}
+header h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.5px}
+header h1 span{color:var(--primary)}
+.icon-btn{background:none;border:none;font-size:22px;padding:4px 8px;color:var(--sub)}
+main{padding:4px 14px 96px}
+.card{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h2{font-size:15px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.card h2 small{font-weight:400;color:var(--sub);font-size:13px}
+.muted{color:var(--sub);font-size:13px}
+.empty{color:var(--sub);text-align:center;padding:22px 0;font-size:14px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+  display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;padding:8px 0 9px;color:#9aa0a8;font-size:11px;
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ni{font-size:20px;line-height:1.1;filter:grayscale(1);opacity:.6}
+nav button.on{color:var(--primary);font-weight:700}
+nav button.on .ni{filter:none;opacity:1}
+.fab{position:fixed;right:18px;bottom:78px;width:56px;height:56px;border-radius:50%;
+  background:var(--primary);color:#fff;border:none;font-size:30px;line-height:56px;
+  box-shadow:0 4px 12px rgba(59,110,245,.4);z-index:15}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.list-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:none}
+.grow{flex:1;min-width:0}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;background:var(--primary-weak);color:var(--primary);font-weight:600}
+.chip.red{background:#fdecec;color:var(--red)}
+.chip.green{background:#e6f6ec;color:var(--green)}
+.chip.gray{background:#eef0f3;color:var(--sub)}
+.seg{display:flex;background:#eceef2;border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:none;background:none;padding:7px 0;border-radius:8px;color:var(--sub);font-size:14px}
+.seg button.on{background:#fff;color:var(--text);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;margin-bottom:12px}
+/* checkbox */
+.chk{width:24px;height:24px;border-radius:50%;border:2px solid #c5cad3;background:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;padding:0}
+.chk.on{background:var(--green);border-color:var(--green)}
+.done .txt{text-decoration:line-through;color:#a0a6af}
+/* memo grid */
+.memo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.memo{border-radius:var(--radius);padding:12px;min-height:110px;box-shadow:0 1px 2px rgba(0,0,0,.05);
+  display:flex;flex-direction:column;gap:6px;word-break:break-word}
+.memo b{font-size:15px}
+.memo .body{font-size:13px;color:#444;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.memo .foot{margin-top:auto;font-size:11px;color:#888;display:flex;justify-content:space-between}
+/* weather */
+.wx-now{display:flex;align-items:center;gap:14px}
+.wx-ico{font-size:50px;line-height:1}
+.wx-temp{font-size:38px;font-weight:800;letter-spacing:-1px}
+.wx-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:12px;margin-top:12px}
+.wx-days div{padding:6px 0;border-radius:10px}
+.wx-days .ic{font-size:20px;margin:3px 0}
+.wx-hours{display:flex;overflow-x:auto;gap:14px;padding:6px 0 2px;font-size:12px;text-align:center}
+.wx-hours div{flex:none;min-width:40px}
+.hi{color:var(--red)}.lo{color:var(--primary)}
+/* calendar */
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-head b{font-size:18px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal .dow{font-size:12px;color:var(--sub);padding:4px 0}
+.cal .d{min-height:52px;padding:4px 0;border-radius:10px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cal .d.other{opacity:.3}
+.cal .d.today .n{background:var(--primary);color:#fff;border-radius:50%;width:26px;height:26px;line-height:26px}
+.cal .d.sel{background:var(--primary-weak)}
+.cal .n{width:26px;height:26px;line-height:26px}
+.sun,.hol{color:var(--red)}.sat{color:var(--primary)}
+.dots{display:flex;gap:2px;height:6px}
+.dot{width:6px;height:6px;border-radius:50%}
+.dt-todo{background:var(--green)}.dt-anniv{background:var(--red)}.dt-led{background:var(--orange)}.dt-memo{background:var(--purple)}
+.legend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--sub);margin-top:8px}
+.legend span{display:flex;align-items:center;gap:4px}
+/* ledger */
+.sum3{display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;gap:6px}
+.sum3 .v{font-size:16px;font-weight:800;margin-top:3px}
+.plus{color:var(--primary)}.minus{color:var(--red)}
+.bar{height:8px;background:#eef0f3;border-radius:6px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--red);border-radius:6px}
+/* anniversary */
+.dday{font-weight:800;font-size:16px;min-width:70px;text-align:right}
+.dday.soon{color:var(--red)}
+/* sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:flex;align-items:flex-end}
+.sheet{background:#fff;width:100%;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  max-height:92vh;overflow-y:auto;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 14px;font-size:18px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--sub);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fafbfc}
+.field textarea{min-height:160px;resize:vertical;line-height:1.5}
+.btns{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;padding:13px 0;border-radius:12px;border:none;font-weight:700;font-size:15px}
+.btn.pri{background:var(--primary);color:#fff}
+.btn.sec{background:#eef0f3;color:var(--text)}
+.btn.del{background:#fdecec;color:var(--red);flex:0 0 76px}
+.colors{display:flex;gap:10px}
+.colors button{width:32px;height:32px;border-radius:50%;border:2px solid transparent}
+.colors button.on{border-color:var(--text)}
+.cats{display:flex;flex-wrap:wrap;gap:6px}
+.cats button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px}
+.cats button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(30,30,30,.9);color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:14px;z-index:99;white-space:nowrap}
+.greet{font-size:22px;font-weight:800;margin:4px 2px 12px;letter-spacing:-.5px}
+.greet small{display:block;font-size:13px;color:var(--sub);font-weight:400;margin-top:2px}
+.link{color:var(--primary);background:none;border:none;font-size:13px;padding:0}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">오늘의<span>메모</span></h1>
+  <button class="icon-btn" onclick="openSettings()" aria-label="설정">⚙️</button>
+</header>
+<main id="main"></main>
+<button class="fab" id="fab" onclick="fabAction()">＋</button>
+<nav id="nav"></nav>
+<div id="sheet-root"></div>
+
+<script>
+'use strict';
+/* ================= 저장소 ================= */
+const KEY='oneulmemo_v1';
+const DEF={memos:[],todos:[],annivs:[],ledger:[],settings:{city:'서울'},weather:null};
+let S;
+function hasBridge(){return typeof window.Android!=='undefined'}
+function load(){
+  let raw=null;
+  try{raw=localStorage.getItem(KEY)}catch(e){}
+  if(!raw && hasBridge()){try{raw=Android.load()}catch(e){}}
+  try{S=raw?JSON.parse(raw):null}catch(e){S=null}
+  S=Object.assign(JSON.parse(JSON.stringify(DEF)),S||{});
+  S.settings=Object.assign({city:'서울'},S.settings||{});
+}
+function save(){
+  const raw=JSON.stringify(S);
+  try{localStorage.setItem(KEY,raw)}catch(e){}
+  if(hasBridge()){try{Android.save(raw)}catch(e){}}
+}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ================= 유틸 ================= */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const DOW=['일','월','화','수','목','금','토'];
+function fmtDate(s,withDow=true){if(!s)return'';const d=parse(s);return (d.getMonth()+1)+'월 '+d.getDate()+'일'+(withDow?' ('+DOW[d.getDay()]+')':'')}
+function daysBetween(a,b){return Math.round((parse(b)-parse(a))/86400000)}
+const won=n=>(Math.round(n)||0).toLocaleString('ko-KR')+'원';
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+const HOLI={'01-01':'신정','03-01':'삼일절','05-05':'어린이날','06-06':'현충일','08-15':'광복절','10-03':'개천절','10-09':'한글날','12-25':'성탄절'};
+
+/* ================= 탭 ================= */
+const TABS=[
+  {id:'home',ic:'🏠',nm:'오늘'},
+  {id:'memo',ic:'📝',nm:'메모'},
+  {id:'todo',ic:'✅',nm:'할일'},
+  {id:'cal',ic:'📅',nm:'달력'},
+  {id:'anniv',ic:'🎉',nm:'기념일'},
+  {id:'ledger',ic:'💰',nm:'가계부'},
+];
+let tab='home';
+let ui={memoQ:'',todoFilter:'active',calY:null,calM:null,calSel:today(),ledY:null,ledM:null,ledView:'list'};
+function renderNav(){
+  document.getElementById('nav').innerHTML=TABS.map(t=>
+    `<button class="${t.id===tab?'on':''}" onclick="go('${t.id}')"><span class="ni">${t.ic}</span>${t.nm}</button>`).join('');
+}
+function go(t){tab=t;closeSheet();render();window.scrollTo(0,0)}
+function render(){
+  renderNav();
+  const m=document.getElementById('main');
+  const R={home:rHome,memo:rMemo,todo:rTodo,cal:rCal,anniv:rAnniv,ledger:rLedger};
+  m.innerHTML=R[tab]();
+  document.getElementById('fab').style.display=(tab==='home'||tab==='weather')?'none':'block';
+  if(tab==='home')ensureWeather();
+}
+function fabAction(){
+  if(tab==='memo')editMemo();
+  else if(tab==='todo')editTodo();
+  else if(tab==='cal')calAddMenu();
+  else if(tab==='anniv')editAnniv();
+  else if(tab==='ledger')editLedger();
+}
+
+/* ================= 날씨 ================= */
+const CITIES={
+ '서울':[37.5665,126.978],'부산':[35.1796,129.0756],'대구':[35.8714,128.6014],'인천':[37.4563,126.7052],
+ '광주':[35.1595,126.8526],'대전':[36.3504,127.3845],'울산':[35.5384,129.3114],'세종':[36.48,127.289],
+ '수원':[37.2636,127.0286],'성남':[37.42,127.1267],'고양':[37.6584,126.832],'용인':[37.2411,127.1776],
+ '춘천':[37.8813,127.7298],'강릉':[37.7519,128.8761],'원주':[37.3422,127.9202],'청주':[36.6424,127.489],
+ '천안':[36.8151,127.1139],'전주':[35.8242,127.148],'목포':[34.8118,126.3922],'여수':[34.7604,127.6622],
+ '포항':[36.019,129.3435],'경주':[35.8562,129.2247],'안동':[36.5684,128.7294],'창원':[35.2285,128.6811],
+ '진주':[35.18,128.1076],'제주':[33.4996,126.5312],'서귀포':[33.2541,126.56]
+};
+function wmo(c){
+  if(c===0)return['☀️','맑음'];if(c===1)return['🌤️','대체로 맑음'];if(c===2)return['⛅','구름 조금'];if(c===3)return['☁️','흐림'];
+  if(c===45||c===48)return['🌫️','안개'];if(c>=51&&c<=57)return['🌦️','이슬비'];if(c>=61&&c<=67)return['🌧️','비'];
+  if(c>=71&&c<=77)return['🌨️','눈'];if(c>=80&&c<=82)return['🌧️','소나기'];if(c===85||c===86)return['🌨️','소낙눈'];
+  if(c>=95)return['⛈️','뇌우'];return['🌡️','-'];
+}
+function pmGrade(v,type){ // 한국 환경부 기준
+  if(v==null)return['-','gray'];
+  const t=type==='pm10'?[30,80,150]:[15,35,75];
+  if(v<=t[0])return['좋음','green'];if(v<=t[1])return['보통',''];if(v<=t[2])return['나쁨','red'];return['매우나쁨','red'];
+}
+let wxLoading=false;
+async function httpJson(url){
+  try{const r=await fetch(url);if(!r.ok)throw 0;return await r.json()}
+  catch(e){
+    if(hasBridge()){const t=Android.httpGet(url);if(t)return JSON.parse(t)}
+    throw e;
+  }
+}
+async function ensureWeather(force){
+  const w=S.weather;
+  if(!force&&w&&w.city===S.settings.city&&Date.now()-w.ts<30*60000)return;
+  if(wxLoading)return;wxLoading=true;
+  const[lat,lon]=CITIES[S.settings.city]||CITIES['서울'];
+  try{
+    const f=await httpJson(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`+
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation`+
+      `&hourly=temperature_2m,weather_code,precipitation_probability`+
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset`+
+      `&timezone=Asia%2FSeoul&forecast_days=7`);
+    let aq=null;
+    try{aq=await httpJson(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5&timezone=Asia%2FSeoul`)}catch(e){}
+    S.weather={city:S.settings.city,ts:Date.now(),f,aq};save();
+    if(tab==='home')render();
+  }catch(e){
+    if(force)toast('날씨를 불러오지 못했어요. 인터넷 연결을 확인하세요.');
+  }finally{wxLoading=false}
+}
+function weatherCard(full){
+  const w=S.weather;
+  const head=`<h2>🌤️ 날씨 · ${esc(S.settings.city)} <small><button class="link" onclick="pickCity()">지역 변경</button> · <button class="link" onclick="ensureWeather(true);toast('새로고침 중…')">새로고침</button></small></h2>`;
+  if(!w||w.city!==S.settings.city||!w.f||!w.f.current)return `<div class="card">${head}<div class="empty">날씨 불러오는 중…</div></div>`;
+  const c=w.f.current,d=w.f.daily,[ic,tx]=wmo(c.weather_code);
+  const pm10=w.aq&&w.aq.current?w.aq.current.pm10:null,pm25=w.aq&&w.aq.current?w.aq.current.pm2_5:null;
+  const g10=pmGrade(pm10,'pm10'),g25=pmGrade(pm25,'pm25');
+  // 시간별: 지금부터 24시간
+  const H=w.f.hourly;let hrs='';
+  if(H&&H.time){
+    const nowIso=c.time.slice(0,13);let i0=H.time.findIndex(t=>t.slice(0,13)>=nowIso);if(i0<0)i0=0;
+    for(let i=i0;i<Math.min(i0+24,H.time.length);i++){
+      hrs+=`<div><div class="muted">${Number(H.time[i].slice(11,13))}시</div><div style="font-size:18px">${wmo(H.weather_code[i])[0]}</div><div>${Math.round(H.temperature_2m[i])}°</div><div class="muted" style="font-size:10px">${H.precipitation_probability[i]??0}%</div></div>`;
+    }
+  }
+  const days=d.time.map((t,i)=>{const dt=parse(t);return `<div><div class="${dt.getDay()===0?'sun':dt.getDay()===6?'sat':''}">${i===0?'오늘':DOW[dt.getDay()]}</div><div class="ic">${wmo(d.weather_code[i])[0]}</div><div class="hi">${Math.round(d.temperature_2m_max[i])}°</div><div class="lo">${Math.round(d.temperature_2m_min[i])}°</div><div class="muted" style="font-size:10px">☔${d.precipitation_probability_max[i]??0}%</div></div>`}).join('');
+  const upd=new Date(w.ts);
+  return `<div class="card">${head}
+    <div class="wx-now"><div class="wx-ico">${ic}</div>
+      <div class="grow"><div class="wx-temp">${Math.round(c.temperature_2m)}°</div><div>${tx}</div><div class="muted">체감 ${Math.round(c.apparent_temperature)}°</div></div>
+      <div class="muted" style="text-align:right;line-height:1.7">최고 <span class="hi">${Math.round(d.temperature_2m_max[0])}°</span> / 최저 <span class="lo">${Math.round(d.temperature_2m_min[0])}°</span><br>습도 ${c.relative_humidity_2m}% · 바람 ${(c.wind_speed_10m/3.6).toFixed(1)}m/s<br>강수확률 ${d.precipitation_probability_max[0]??0}%</div>
+    </div>
+    <div class="row" style="margin-top:10px;gap:6px;flex-wrap:wrap">
+      <span class="chip ${g10[1]}">미세먼지 ${g10[0]}${pm10!=null?' '+Math.round(pm10):''}</span>
+      <span class="chip ${g25[1]}">초미세먼지 ${g25[0]}${pm25!=null?' '+Math.round(pm25):''}</span>
+    </div>
+    ${full?`<div class="wx-hours">${hrs}</div>`:''}
+    <div class="wx-days">${days}</div>
+    <div class="muted" style="text-align:right;margin-top:6px;font-size:11px">업데이트 ${pad(upd.getHours())}:${pad(upd.getMinutes())} · Open-Meteo</div>
+  </div>`;
+}
+function pickCity(){
+  openSheet(`<h3>지역 선택</h3><div class="cats">${Object.keys(CITIES).map(c=>`<button class="${c===S.settings.city?'on':''}" onclick="setCity('${c}')">${c}</button>`).join('')}</div>
+  <div class="btns"><button class="btn sec" onclick="closeSheet()">닫기</button></div>`);
+}
+function setCity(c){S.settings.city=c;save();closeSheet();render();ensureWeather(true)}
+
+/* ================= 홈 ================= */
+function rHome(){
+  const t=today(),d=new Date();
+  const hour=d.getHours();
+  const hi=hour<6?'좋은 새벽이에요':hour<12?'좋은 아침이에요':hour<18?'좋은 오후예요':'편안한 저녁 되세요';
+  const todos=S.todos.filter(x=>!x.done&&(!x.due||x.due<=t)).sort(todoSort);
+  const up=S.annivs.map(a=>({a,...annivInfo(a)})).filter(x=>x.next!=null&&x.diff>=0&&x.diff<=30).sort((x,y)=>x.diff-y.diff);
+  const ym=t.slice(0,7);
+  const out=S.ledger.filter(x=>x.type==='out'&&x.date.slice(0,7)===ym).reduce((s,x)=>s+x.amount,0);
+  const inc=S.ledger.filter(x=>x.type==='in'&&x.date.slice(0,7)===ym).reduce((s,x)=>s+x.amount,0);
+  const todayOut=S.ledger.filter(x=>x.type==='out'&&x.date===t).reduce((s,x)=>s+x.amount,0);
+  const memos=[...S.memos].sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated)).slice(0,3);
+  return `<div class="greet">${hi} 👋<small>${d.getFullYear()}년 ${fmtDate(t)}${HOLI[t.slice(5)]?' · '+HOLI[t.slice(5)]:''}</small></div>
+  ${weatherCard(true)}
+  <div class="card"><h2>✅ 오늘 할 일 <small>${todos.length}개 남음 · <button class="link" onclick="go('todo')">전체</button></small></h2>
+    ${todos.length?todos.slice(0,6).map(todoRow).join(''):'<div class="empty">오늘 할 일을 모두 끝냈어요 🎉</div>'}
+    <button class="link" onclick="editTodo(null,'${t}')" style="margin-top:6px">＋ 할 일 추가</button></div>
+  <div class="card"><h2>🎉 다가오는 기념일 <small>30일 이내</small></h2>
+    ${up.length?up.map(x=>annivRow(x.a)).join(''):'<div class="empty">30일 안에 기념일이 없어요</div>'}</div>
+  <div class="card"><h2>💰 이번 달 가계부 <small><button class="link" onclick="go('ledger')">자세히</button></small></h2>
+    <div class="sum3"><div><div class="muted">수입</div><div class="v plus">${won(inc)}</div></div>
+    <div><div class="muted">지출</div><div class="v minus">${won(out)}</div></div>
+    <div><div class="muted">오늘 지출</div><div class="v">${won(todayOut)}</div></div></div>
+    <button class="link" onclick="editLedger(null,'${t}')" style="margin-top:10px">＋ 지출/수입 기록</button></div>
+  <div class="card"><h2>📝 최근 메모 <small><button class="link" onclick="go('memo')">전체</button></small></h2>
+    ${memos.length?memos.map(m=>`<div class="list-item" onclick="editMemo('${m.id}')"><span>${m.pinned?'📌':'🗒️'}</span><div class="grow"><div class="ellipsis"><b>${esc(m.title||'(제목 없음)')}</b></div><div class="muted ellipsis">${esc((m.body||'').split('\n')[0])}</div></div></div>`).join(''):'<div class="empty">메모가 없어요</div>'}
+    <button class="link" onclick="editMemo()" style="margin-top:6px">＋ 새 메모</button></div>`;
+}
+
+/* ================= 메모 ================= */
+const MCOL=['#ffffff','#fff4c2','#ffe0e0','#dff3e4','#dde9ff','#efe3ff'];
+function rMemo(){
+  const q=ui.memoQ.trim().toLowerCase();
+  const list=S.memos.filter(m=>!q||(m.title+' '+m.body).toLowerCase().includes(q))
+    .sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated));
+  return `<input class="search" placeholder="🔍 메모 검색" value="${esc(ui.memoQ)}" oninput="ui.memoQ=this.value;document.getElementById('mg').innerHTML=memoGrid()">
+  <div id="mg">${memoGrid(list)}</div>`;
+}
+function memoGrid(list){
+  if(!list){const q=ui.memoQ.trim().toLowerCase();list=S.memos.filter(m=>!q||(m.title+' '+m.body).toLowerCase().includes(q)).sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated))}
+  if(!list.length)return `<div class="card empty">${ui.memoQ?'검색 결과가 없어요':'＋ 버튼으로 첫 메모를 남겨보세요'}</div>`;
+  return `<div class="memo-grid">${list.map(m=>{const u=new Date(m.updated);return `<div class="memo" style="background:${m.color||'#fff'}" onclick="editMemo('${m.id}')">
+    <b class="ellipsis">${m.pinned?'📌 ':''}${esc(m.title||'(제목 없음)')}</b><div class="body">${esc(m.body)}</div>
+    <div class="foot"><span>${u.getMonth()+1}.${u.getDate()} ${pad(u.getHours())}:${pad(u.getMinutes())}</span></div></div>`}).join('')}</div>`;
+}
+let draftColor='#ffffff',memoDate=null;
+function editMemo(id,date){memoDate=date||null;
+  const m=id?S.memos.find(x=>x.id===id):null;draftColor=m?m.color||'#ffffff':'#ffffff';
+  openSheet(`<h3>${m?'메모 수정':'새 메모'}</h3>
+  <div class="field"><input id="m-title" placeholder="제목" value="${esc(m?m.title:'')}"></div>
+  <div class="field"><textarea id="m-body" placeholder="내용을 입력하세요">${esc(m?m.body:'')}</textarea></div>
+  <div class="between"><div class="colors" id="m-colors">${MCOL.map(c=>`<button style="background:${c};${c==='#ffffff'?'border-color:#ddd':''}" class="${c===draftColor?'on':''}" onclick="draftColor='${c}';[...this.parentNode.children].forEach(b=>b.classList.remove('on'));this.classList.add('on')"></button>`).join('')}</div>
+  <label class="row muted"><input type="checkbox" id="m-pin" ${m&&m.pinned?'checked':''}> 고정</label></div>
+  <div class="btns">${m?`<button class="btn del" onclick="delItem('memos','${m.id}')">삭제</button>`:''}
+  ${m?`<button class="btn sec" onclick="shareText(document.getElementById('m-title').value+'\\n'+document.getElementById('m-body').value)">공유</button>`:''}
+  <button class="btn pri" onclick="saveMemo('${m?m.id:''}')">저장</button></div>`);
+  if(!m)setTimeout(()=>document.getElementById('m-title').focus(),200);
+}
+function saveMemo(id){
+  const title=val('m-title').trim(),body=val('m-body');
+  if(!title&&!body.trim()){toast('내용을 입력하세요');return}
+  const pinned=document.getElementById('m-pin').checked?1:0;
+  if(id){Object.assign(S.memos.find(x=>x.id===id),{title,body,pinned,color:draftColor,updated:Date.now()})}
+  else S.memos.push({id:uid(),title,body,pinned,color:draftColor,date:memoDate||today(),created:Date.now(),updated:Date.now()});
+  save();closeSheet();render();toast('저장했어요');
+}
+
+/* ================= 할 일 ================= */
+const PRIO={2:['높음','red'],1:['보통',''],0:['낮음','gray']};
+function todoSort(a,b){return (a.done-b.done)||((a.due||'9999')<(b.due||'9999')?-1:(a.due||'9999')>(b.due||'9999')?1:0)||((b.prio||1)-(a.prio||1))||(a.created-b.created)}
+function todoRow(x){
+  const t=today();let dueTxt='';
+  if(x.due){const df=daysBetween(t,x.due);dueTxt=df===0?'<span class="chip">오늘</span>':df<0?`<span class="chip red">${-df}일 지남</span>`:df===1?'<span class="chip gray">내일</span>':`<span class="chip gray">${fmtDate(x.due,false)}</span>`}
+  const p=PRIO[x.prio??1];
+  return `<div class="list-item ${x.done?'done':''}"><button class="chk ${x.done?'on':''}" onclick="toggleTodo('${x.id}')">${x.done?'✓':''}</button>
+  <div class="grow" onclick="editTodo('${x.id}')"><div class="txt">${esc(x.text)}</div>
+  ${x.memo?`<div class="muted ellipsis">${esc(x.memo)}</div>`:''}</div>
+  ${x.prio===2?`<span class="chip red">!</span>`:''}${dueTxt}</div>`;
+}
+function rTodo(){
+  const f=ui.todoFilter,t=today();
+  let list=S.todos.slice();
+  if(f==='active')list=list.filter(x=>!x.done);
+  else if(f==='today')list=list.filter(x=>!x.done&&x.due&&x.due<=t);
+  else if(f==='done')list=list.filter(x=>x.done);
+  list.sort(todoSort);
+  const doneCnt=S.todos.filter(x=>x.done).length;
+  return `<div class="seg">${[['active','진행중'],['today','오늘까지'],['all','전체'],['done','완료']].map(([k,n])=>`<button class="${f===k?'on':''}" onclick="ui.todoFilter='${k}';render()">${n}</button>`).join('')}</div>
+  <div class="card">${list.length?list.map(todoRow).join(''):'<div class="empty">할 일이 없어요</div>'}</div>
+  ${f==='done'&&doneCnt?`<button class="btn sec" style="width:100%" onclick="clearDone()">완료한 일 모두 지우기 (${doneCnt})</button>`:''}`;
+}
+function toggleTodo(id){const x=S.todos.find(t=>t.id===id);x.done=x.done?0:1;x.doneAt=x.done?Date.now():null;save();render()}
+function clearDone(){if(!confirm('완료한 할 일을 모두 지울까요?'))return;S.todos=S.todos.filter(x=>!x.done);save();render()}
+function editTodo(id,date){
+  const x=id?S.todos.find(t=>t.id===id):null;
+  openSheet(`<h3>${x?'할 일 수정':'새 할 일'}</h3>
+  <div class="field"><input id="t-text" placeholder="무엇을 해야 하나요?" value="${esc(x?x.text:'')}"></div>
+  <div class="field"><label>마감일</label><input type="date" id="t-due" value="${x?x.due||'':date||''}"></div>
+  <div class="field"><label>중요도</label><select id="t-prio">${[2,1,0].map(p=>`<option value="${p}" ${(x?x.prio??1:1)===p?'selected':''}>${PRIO[p][0]}</option>`).join('')}</select></div>
+  <div class="field"><label>메모</label><input id="t-memo" placeholder="선택" value="${esc(x?x.memo||'':'')}"></div>
+  <div class="btns">${x?`<button class="btn del" onclick="delItem('todos','${x.id}')">삭제</button>`:''}<button class="btn pri" onclick="saveTodo('${x?x.id:''}')">저장</button></div>`);
+  if(!x)setTimeout(()=>document.getElementById('t-text').focus(),200);
+}
+function saveTodo(id){
+  const text=val('t-text').trim();if(!text){toast('할 일을 입력하세요');return}
+  const o={text,due:val('t-due'),prio:Number(val('t-prio')),memo:val('t-memo').trim()};
+  if(id)Object.assign(S.todos.find(x=>x.id===id),o);else S.todos.push({id:uid(),done:0,created:Date.now(),...o});
+  save();closeSheet();render();toast('저장했어요');
+}
+
+/* ================= 기념일 ================= */
+const ATYPE={yearly:'매년 반복',once:'한 번 (D-day)',since:'그날부터 세기'};
+const AICON=['🎂','💑','💍','🎓','🏠','✈️','🙏','⭐'];
+function annivInfo(a){
+  const t=today();
+  if(a.type==='since'){
+    const passed=daysBetween(a.date,t)+1; // 당일=1일
+    const nextM=Math.ceil(passed/100)*100||100;
+    const target=new Date(parse(a.date).getTime()+(nextM-1)*86400000);
+    // 연 단위 기념일도 확인
+    const yr=yearlyNext(a.date,t);
+    return {passed,next:nextM===passed?t:ymd(target),diff:Math.min(daysBetween(t,ymd(target)),yr.diff),label:passed>0?`+${passed}일`:`D-${1-passed}`,sub:`${nextM}일까지 ${daysBetween(t,ymd(target))}일 · ${yr.years}주년까지 ${yr.diff}일`};
+  }
+  if(a.type==='once'){
+    const df=daysBetween(t,a.date);
+    return {next:a.date,diff:df,label:df===0?'D-DAY':df>0?'D-'+df:'D+'+(-df),sub:fmtDate(a.date)};
+  }
+  const y=yearlyNext(a.date,t);
+  return {next:y.next,diff:y.diff,label:y.diff===0?'D-DAY':'D-'+y.diff,sub:`${fmtDate(y.next)}${y.years>0?' · '+y.years+(a.icon==='🎂'?'번째 생일':'주년'):''}`};
+}
+function yearlyNext(date,t){
+  const o=parse(date),now=parse(t);
+  let y=now.getFullYear();
+  const mk=yy=>{const m=o.getMonth(),d=o.getDate();const last=new Date(yy,m+1,0).getDate();return new Date(yy,m,Math.min(d,last))};
+  let n=mk(y);if(n<now)n=mk(++y);
+  return {next:ymd(n),diff:daysBetween(t,ymd(n)),years:y-o.getFullYear()};
+}
+function annivRow(a){
+  const i=annivInfo(a);
+  return `<div class="list-item" onclick="editAnniv('${a.id}')"><span style="font-size:24px">${a.icon||'⭐'}</span>
+  <div class="grow"><div class="ellipsis"><b>${esc(a.name)}</b></div><div class="muted ellipsis">${esc(i.sub)}</div></div>
+  <div class="dday ${i.diff>=0&&i.diff<=7?'soon':''}">${i.label}</div></div>`;
+}
+function rAnniv(){
+  const list=S.annivs.map(a=>({a,i:annivInfo(a)})).sort((x,y)=>{
+    const dx=x.i.diff<0?99999:x.i.diff,dy=y.i.diff<0?99999:y.i.diff;return dx-dy});
+  return `<div class="card">${list.length?list.map(x=>annivRow(x.a)).join(''):'<div class="empty">생일, 결혼기념일, 시험일 등을 등록해보세요</div>'}</div>`;
+}
+let draftIcon='🎂';
+function editAnniv(id,date){
+  const a=id?S.annivs.find(x=>x.id===id):null;draftIcon=a?a.icon||'⭐':'🎂';
+  openSheet(`<h3>${a?'기념일 수정':'새 기념일'}</h3>
+  <div class="field"><input id="a-name" placeholder="예: 엄마 생신, 결혼기념일" value="${esc(a?a.name:'')}"></div>
+  <div class="field"><label>날짜 (양력)</label><input type="date" id="a-date" value="${a?a.date:date||today()}"></div>
+  <div class="field"><label>종류</label><select id="a-type">${Object.entries(ATYPE).map(([k,v])=>`<option value="${k}" ${(a?a.type:'yearly')===k?'selected':''}>${v}</option>`).join('')}</select></div>
+  <div class="field"><label>아이콘</label><div class="cats">${AICON.map(c=>`<button class="${c===draftIcon?'on':''}" style="font-size:18px" onclick="draftIcon='${c}';[...this.parentNode.children].forEach(b=>b.classList.remove('on'));this.classList.add('on')">${c}</button>`).join('')}</div></div>
+  <div class="btns">${a?`<button class="btn del" onclick="delItem('annivs','${a.id}')">삭제</button>`:''}<button class="btn pri" onclick="saveAnniv('${a?a.id:''}')">저장</button></div>`);
+}
+function saveAnniv(id){
+  const name=val('a-name').trim(),date=val('a-date');
+  if(!name||!date){toast('이름과 날짜를 입력하세요');return}
+  const o={name,date,type:val('a-type'),icon:draftIcon};
+  if(id)Object.assign(S.annivs.find(x=>x.id===id),o);else S.annivs.push({id:uid(),...o});
+  save();closeSheet();render();toast('저장했어요');
+}
+function annivOn(a,ds){
+  if(a.type==='once')return a.date===ds;
+  if(a.type==='yearly')return ds>=a.date&&a.date.slice(5)===ds.slice(5);
+  if(a.type==='since'){if(ds<a.date)return false;const n=daysBetween(a.date,ds)+1;return ds===a.date||n%100===0||(a.date.slice(5)===ds.slice(5))}
+  return false;
+}
+
+/* ================= 가계부 ================= */
+const CAT_OUT=['식비','카페·간식','교통','쇼핑','생활용품','주거·통신','의료·건강','문화·여가','경조사','교육','저축·보험','기타'];
+const CAT_IN=['월급','용돈','부수입','이자·배당','환급','기타'];
+const CAT_IC={'식비':'🍚','카페·간식':'☕','교통':'🚌','쇼핑':'🛍️','생활용품':'🧴','주거·통신':'🏠','의료·건강':'💊','문화·여가':'🎬','경조사':'💐','교육':'📚','저축·보험':'🏦','기타':'📦','월급':'💼','용돈':'💵','부수입':'💡','이자·배당':'📈','환급':'↩️'};
+function rLedger(){
+  const now=new Date();if(ui.ledY==null){ui.ledY=now.getFullYear();ui.ledM=now.getMonth()}
+  const ym=ui.ledY+'-'+pad(ui.ledM+1);
+  const L=S.ledger.filter(x=>x.date.slice(0,7)===ym);
+  const inc=L.filter(x=>x.type==='in').reduce((s,x)=>s+x.amount,0),out=L.filter(x=>x.type==='out').reduce((s,x)=>s+x.amount,0);
+  let body='';
+  if(ui.ledView==='list'){
+    const byDate={};L.forEach(x=>(byDate[x.date]=byDate[x.date]||[]).push(x));
+    const dates=Object.keys(byDate).sort().reverse();
+    body=dates.length?dates.map(d=>{const arr=byDate[d].sort((a,b)=>b.created-a.created);const dOut=arr.filter(x=>x.type==='out').reduce((s,x)=>s+x.amount,0);
+      return `<div class="card"><h2>${fmtDate(d)} <small class="minus">${dOut?'-'+won(dOut):''}</small></h2>${arr.map(ledRow).join('')}</div>`}).join('')
+      :'<div class="card empty">이 달의 기록이 없어요</div>';
+  }else{
+    const cat={};L.filter(x=>x.type==='out').forEach(x=>cat[x.cat]=(cat[x.cat]||0)+x.amount);
+    const arr=Object.entries(cat).sort((a,b)=>b[1]-a[1]);const mx=arr.length?arr[0][1]:1;
+    // 지난달 비교
+    const pd=new Date(ui.ledY,ui.ledM-1,1),pym=pd.getFullYear()+'-'+pad(pd.getMonth()+1);
+    const pout=S.ledger.filter(x=>x.type==='out'&&x.date.slice(0,7)===pym).reduce((s,x)=>s+x.amount,0);
+    const days=new Date(ui.ledY,ui.ledM+1,0).getDate();
+    const isCur=ui.ledY===now.getFullYear()&&ui.ledM===now.getMonth();
+    const passed=isCur?now.getDate():days;
+    body=`<div class="card"><h2>카테고리별 지출</h2>${arr.length?arr.map(([k,v])=>`<div style="margin-bottom:10px"><div class="between"><span>${CAT_IC[k]||'📦'} ${esc(k)}</span><span><b>${won(v)}</b> <span class="muted">${Math.round(v/out*100)}%</span></span></div><div class="bar"><i style="width:${v/mx*100}%"></i></div></div>`).join(''):'<div class="empty">지출 기록이 없어요</div>'}</div>
+    <div class="card"><h2>요약</h2>
+      <div class="list-item"><div class="grow">하루 평균 지출</div><b>${won(out/Math.max(passed,1))}</b></div>
+      <div class="list-item"><div class="grow">지난달 지출</div><b>${won(pout)}</b></div>
+      <div class="list-item"><div class="grow">지난달 대비</div><b class="${out>pout?'minus':'plus'}">${pout?(out>=pout?'+':'')+Math.round((out-pout)/pout*100)+'%':'-'}</b></div>
+      ${S.settings.budget?`<div class="list-item"><div class="grow">월 예산 ${won(S.settings.budget)} 중 남은 돈</div><b class="${S.settings.budget-out<0?'minus':'plus'}">${won(S.settings.budget-out)}</b></div>`:''}
+      <button class="link" style="margin-top:8px" onclick="setBudget()">월 예산 ${S.settings.budget?'변경':'설정'}</button>
+    </div>`;
+  }
+  return `<div class="cal-head"><button class="icon-btn" onclick="ledMove(-1)">‹</button><b>${ui.ledY}년 ${ui.ledM+1}월</b><button class="icon-btn" onclick="ledMove(1)">›</button></div>
+  <div class="card"><div class="sum3"><div><div class="muted">수입</div><div class="v plus">${won(inc)}</div></div><div><div class="muted">지출</div><div class="v minus">${won(out)}</div></div><div><div class="muted">합계</div><div class="v">${won(inc-out)}</div></div></div>
+  ${S.settings.budget?`<div class="bar" style="margin-top:12px"><i style="width:${Math.min(100,out/S.settings.budget*100)}%;background:${out>S.settings.budget?'var(--red)':'var(--primary)'}"></i></div><div class="muted" style="margin-top:4px;font-size:12px">예산 ${won(S.settings.budget)} 중 ${Math.round(out/S.settings.budget*100)}% 사용</div>`:''}</div>
+  <div class="seg"><button class="${ui.ledView==='list'?'on':''}" onclick="ui.ledView='list';render()">내역</button><button class="${ui.ledView==='stat'?'on':''}" onclick="ui.ledView='stat';render()">통계</button></div>
+  ${body}`;
+}
+function ledRow(x){
+  return `<div class="list-item" onclick="editLedger('${x.id}')"><span style="font-size:22px">${CAT_IC[x.cat]||'📦'}</span>
+  <div class="grow"><div class="ellipsis">${esc(x.note||x.cat)}</div><div class="muted">${esc(x.cat)}${x.pay?' · '+esc(x.pay):''}</div></div>
+  <b class="${x.type==='in'?'plus':'minus'}">${x.type==='in'?'+':'-'}${won(x.amount)}</b></div>`;
+}
+function ledMove(n){const d=new Date(ui.ledY,ui.ledM+n,1);ui.ledY=d.getFullYear();ui.ledM=d.getMonth();render()}
+let draftType='out',draftCat='식비';
+function editLedger(id,date){
+  const x=id?S.ledger.find(l=>l.id===id):null;
+  draftType=x?x.type:'out';draftCat=x?x.cat:'식비';
+  openSheet(`<h3>${x?'기록 수정':'가계부 기록'}</h3>
+  <div class="seg" id="l-type"><button class="${draftType==='out'?'on':''}" onclick="setLType('out')">지출</button><button class="${draftType==='in'?'on':''}" onclick="setLType('in')">수입</button></div>
+  <div class="field"><label>금액 (원)</label><input id="l-amt" inputmode="numeric" placeholder="0" value="${x?x.amount.toLocaleString('ko-KR'):''}" oninput="fmtAmt(this)"></div>
+  <div class="field"><label>분류</label><div class="cats" id="l-cats"></div></div>
+  <div class="field"><label>내용</label><input id="l-note" placeholder="예: 점심 김치찌개" value="${esc(x?x.note||'':'')}"></div>
+  <div class="row"><div class="field grow"><label>날짜</label><input type="date" id="l-date" value="${x?x.date:date||today()}"></div>
+  <div class="field grow"><label>결제수단</label><select id="l-pay">${['','카드','현금','계좌이체','간편결제'].map(p=>`<option ${(x&&x.pay||'')===p?'selected':''} value="${p}">${p||'선택 안 함'}</option>`).join('')}</select></div></div>
+  <div class="btns">${x?`<button class="btn del" onclick="delItem('ledger','${x.id}')">삭제</button>`:''}<button class="btn pri" onclick="saveLedger('${x?x.id:''}')">저장</button></div>`);
+  drawCats();
+  if(!x)setTimeout(()=>document.getElementById('l-amt').focus(),200);
+}
+function setLType(t){draftType=t;draftCat=t==='out'?'식비':'월급';[...document.getElementById('l-type').children].forEach((b,i)=>b.classList.toggle('on',(i===0)===(t==='out')));drawCats()}
+function drawCats(){const arr=draftType==='out'?CAT_OUT:CAT_IN;if(!arr.includes(draftCat))draftCat=arr[0];
+  document.getElementById('l-cats').innerHTML=arr.map(c=>`<button class="${c===draftCat?'on':''}" onclick="draftCat='${c}';drawCats()">${CAT_IC[c]||''} ${c}</button>`).join('')}
+function fmtAmt(el){const n=el.value.replace(/[^0-9]/g,'');el.value=n?Number(n).toLocaleString('ko-KR'):''}
+function saveLedger(id){
+  const amount=Number(val('l-amt').replace(/[^0-9]/g,''));
+  if(!amount){toast('금액을 입력하세요');return}
+  const o={type:draftType,cat:draftCat,amount,note:val('l-note').trim(),date:val('l-date')||today(),pay:val('l-pay')};
+  if(id)Object.assign(S.ledger.find(x=>x.id===id),o);else S.ledger.push({id:uid(),created:Date.now(),...o});
+  save();closeSheet();render();toast('기록했어요');
+}
+function setBudget(){
+  const v=prompt('한 달 예산(원)을 입력하세요. 0이면 해제',S.settings.budget||'');
+  if(v===null)return;const n=Number(String(v).replace(/[^0-9]/g,''));S.settings.budget=n||0;save();render();
+}
+
+/* ================= 달력 ================= */
+function rCal(){
+  const now=new Date();if(ui.calY==null){ui.calY=now.getFullYear();ui.calM=now.getMonth()}
+  const y=ui.calY,m=ui.calM,first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());
+  const t=today();let cells='';
+  for(let i=0;i<42;i++){
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),ds=ymd(d);
+    if(i>=35&&d.getMonth()!==m)break;
+    const ev=dayEvents(ds);
+    const cls=['d',d.getMonth()!==m?'other':'',ds===t?'today':'',ds===ui.calSel?'sel':'',d.getDay()===0||HOLI[ds.slice(5)]?'sun':d.getDay()===6?'sat':''].join(' ');
+    cells+=`<div class="${cls}" onclick="ui.calSel='${ds}';${d.getMonth()!==m?`ui.calY=${d.getFullYear()};ui.calM=${d.getMonth()};`:''}render()"><div class="n">${d.getDate()}</div>
+      <div class="dots">${ev.todos.length?'<i class="dot dt-todo"></i>':''}${ev.annivs.length?'<i class="dot dt-anniv"></i>':''}${ev.led.length?'<i class="dot dt-led"></i>':''}${ev.memos.length?'<i class="dot dt-memo"></i>':''}</div></div>`;
+  }
+  const ev=dayEvents(ui.calSel);
+  const lo=ev.led.filter(x=>x.type==='out').reduce((s,x)=>s+x.amount,0),li=ev.led.filter(x=>x.type==='in').reduce((s,x)=>s+x.amount,0);
+  const hol=HOLI[ui.calSel.slice(5)];
+  return `<div class="card">
+  <div class="cal-head"><button class="icon-btn" onclick="calMove(-1)">‹</button><b onclick="ui.calY=null;ui.calSel=today();render()">${y}년 ${m+1}월</b><button class="icon-btn" onclick="calMove(1)">›</button></div>
+  <div class="cal">${DOW.map((d,i)=>`<div class="dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('')}${cells}</div>
+  <div class="legend"><span><i class="dot dt-todo"></i>할일</span><span><i class="dot dt-anniv"></i>기념일</span><span><i class="dot dt-led"></i>가계부</span><span><i class="dot dt-memo"></i>메모</span></div></div>
+  <div class="card"><h2>${fmtDate(ui.calSel)}${hol?` <span class="chip red">${hol}</span>`:''} <small>${lo?'<span class="minus">-'+won(lo)+'</span> ':''}${li?'<span class="plus">+'+won(li)+'</span>':''}</small></h2>
+  ${ev.annivs.map(annivRow).join('')}
+  ${ev.todos.map(todoRow).join('')}
+  ${ev.led.map(ledRow).join('')}
+  ${ev.memos.map(mm=>`<div class="list-item" onclick="editMemo('${mm.id}')"><span>🗒️</span><div class="grow ellipsis">${esc(mm.title||(mm.body||'').split('\n')[0]||'(메모)')}</div></div>`).join('')}
+  ${!ev.annivs.length&&!ev.todos.length&&!ev.led.length&&!ev.memos.length?'<div class="empty">일정이 없어요 · ＋ 버튼으로 추가</div>':''}</div>`;
+}
+function dayEvents(ds){
+  return {todos:S.todos.filter(x=>x.due===ds),annivs:S.annivs.filter(a=>annivOn(a,ds)),led:S.ledger.filter(x=>x.date===ds),memos:S.memos.filter(x=>x.date===ds)};
+}
+function calMove(n){const d=new Date(ui.calY,ui.calM+n,1);ui.calY=d.getFullYear();ui.calM=d.getMonth();render()}
+function calAddMenu(){
+  const d=ui.calSel;
+  openSheet(`<h3>${fmtDate(d)}에 추가</h3>
+  <div class="btns" style="flex-direction:column">
+  <button class="btn sec" onclick="editTodo(null,'${d}')">✅ 할 일</button>
+  <button class="btn sec" onclick="editAnniv(null,'${d}')">🎉 기념일</button>
+  <button class="btn sec" onclick="editLedger(null,'${d}')">💰 가계부</button>
+  <button class="btn sec" onclick="newMemoOn('${d}')">📝 메모</button></div>`);
+}
+function newMemoOn(d){editMemo(null,d)}
+
+/* ================= 공통: 시트·삭제·설정 ================= */
+function val(id){const e=document.getElementById(id);return e?e.value:''}
+function openSheet(html){
+  document.getElementById('sheet-root').innerHTML=`<div class="sheet-bg" onclick="if(event.target===this)closeSheet()"><div class="sheet">${html}</div></div>`;
+}
+function closeSheet(){document.getElementById('sheet-root').innerHTML=''}
+function sheetOpen(){return !!document.querySelector('.sheet-bg')}
+function delItem(kind,id){
+  if(!confirm('삭제할까요?'))return;
+  S[kind]=S[kind].filter(x=>x.id!==id);save();closeSheet();render();toast('삭제했어요');
+}
+function shareText(t){if(hasBridge())Android.share(t);else if(navigator.share)navigator.share({text:t});else{navigator.clipboard&&navigator.clipboard.writeText(t);toast('복사했어요')}}
+function openSettings(){
+  const cnt=`메모 ${S.memos.length} · 할일 ${S.todos.length} · 기념일 ${S.annivs.length} · 가계부 ${S.ledger.length}`;
+  openSheet(`<h3>설정</h3>
+  <div class="list-item"><div class="grow">날씨 지역</div><button class="chip" style="border:none" onclick="pickCity()">${esc(S.settings.city)} ›</button></div>
+  <div class="list-item"><div class="grow">월 예산</div><button class="chip" style="border:none" onclick="closeSheet();setBudget()">${S.settings.budget?won(S.settings.budget):'설정 안 함'} ›</button></div>
+  <div class="list-item"><div class="grow">저장된 데이터<div class="muted">${cnt}</div></div></div>
+  <div class="btns" style="flex-direction:column">
+    <button class="btn sec" onclick="exportData()">📤 백업 내보내기 (공유)</button>
+    <button class="btn sec" onclick="importData()">📥 백업 가져오기</button>
+    <button class="btn del" style="flex:1" onclick="resetAll()">모든 데이터 지우기</button>
+  </div>
+  <p class="muted" style="text-align:center;margin-top:16px">오늘의메모 v1.0 · 모든 기록은 이 폰 안에만 저장됩니다<br>날씨: Open-Meteo</p>`);
+}
+function exportData(){
+  const d=Object.assign({},S);delete d.weather;
+  const txt=JSON.stringify({app:'오늘의메모',v:1,at:new Date().toISOString(),data:d});
+  if(hasBridge())Android.shareFile('오늘의메모_백업_'+today()+'.json',txt);else shareText(txt);
+}
+function importData(){
+  openSheet(`<h3>백업 가져오기</h3>
+  <p class="muted">백업 파일을 고르거나, 백업 내용을 붙여넣으세요. 현재 데이터는 덮어씌워집니다.</p>
+  <div class="field"><input type="file" accept=".json,application/json,text/plain" onchange="readBackupFile(this)"></div>
+  <div class="field"><textarea id="imp" placeholder='{"app":"오늘의메모",...}'></textarea></div>
+  <div class="btns"><button class="btn sec" onclick="closeSheet()">취소</button><button class="btn pri" onclick="doImport(val('imp'))">가져오기</button></div>`);
+}
+function readBackupFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('imp').value=r.result};r.readAsText(f)}
+function doImport(txt){
+  try{const o=JSON.parse(txt);const d=o.data||o;if(!Array.isArray(d.memos)&&!Array.isArray(d.todos))throw 0;
+    S=Object.assign(JSON.parse(JSON.stringify(DEF)),d);S.settings=Object.assign({city:'서울'},S.settings||{});save();closeSheet();render();toast('가져오기 완료')}
+  catch(e){toast('올바른 백업 내용이 아니에요')}
+}
+function resetAll(){if(!confirm('모든 메모·할일·기념일·가계부를 지울까요? 되돌릴 수 없어요.'))return;S=JSON.parse(JSON.stringify(DEF));save();closeSheet();render();toast('초기화했어요')}
+
+/* 안드로이드 뒤로가기: true=앱이 처리함 */
+function handleBack(){
+  if(sheetOpen()){closeSheet();return true}
+  if(tab!=='home'){go('home');return true}
+  return false;
+}
+
+load();render();
+</script>
+</body>
+</html>

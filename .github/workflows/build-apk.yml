@@ -1,0 +1,58 @@
+name: Build 오늘의메모 APK
+
+on:
+  push:
+    branches: [ oneul-memo ]
+    paths-ignore: [ 'apk/**', 'README.md' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build release APK
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk out/OneulMemo.apk
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneulMemo-apk
+          path: out/OneulMemo.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: oneul-memo-v1.0.${{ github.run_number }}
+          name: 오늘의메모 v1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          body: 오늘의메모 Android APK (메모·날씨·할일·달력·기념일·가계부)
+          files: out/OneulMemo.apk
+
+      - name: Commit APK back to branch
+        run: |
+          mkdir -p apk
+          cp out/OneulMemo.apk apk/OneulMemo.apk
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add apk/OneulMemo.apk
+          git commit -m "APK 빌드 결과 v1.0.${{ github.run_number }} [skip ci]" || exit 0
+          git push
